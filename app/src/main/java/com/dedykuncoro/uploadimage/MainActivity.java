@@ -41,10 +41,12 @@ public class MainActivity extends AppCompatActivity {
     Bitmap bitmap;
     int success;
     int PICK_IMAGE_REQUEST = 1;
+    int bitmapSize = 100; // range 1 - 100
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    // sesuiakan ip address laptop/pc atau ip emulator android bawaan 10.0.2.2
+    /* 10.0.2.2 adalah IP Address localhost Emulator Android Studio. Ganti IP Address tersebut dengan
+    IP Address Laptop jika di RUN di HP/Genymotion. HP/Genymotion dan Laptop harus 1 jaringan! */
     private String UPLOAD_URL = "http://10.0.2.2/android/upload_image/upload.php";
 
     private static final String TAG_SUCCESS = "success";
@@ -86,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
     public String getStringImage(Bitmap bmp) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        bmp.compress(Bitmap.CompressFormat.JPEG, bitmapSize, baos);
         byte[] imageBytes = baos.toByteArray();
         String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
         return encodedImage;
@@ -169,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
                 //mengambil fambar dari Gallery
                 bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
                 //menampilkan gambar yang dipilih dari gallery ke ImageView
-                imageView.setImageBitmap(bitmap);
+                imageView.setImageBitmap(getResizedBitmap(bitmap, 512)); // 512 adalah resolusi tertinggi setelah image di resize, bisa di ganti.
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -179,6 +181,22 @@ public class MainActivity extends AppCompatActivity {
     private void kosong() {
         imageView.setImageResource(0);
         txt_name.setText(null);
+    }
+
+    // fungsi resize image
+    public Bitmap getResizedBitmap(Bitmap image, int maxSize) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        float bitmapRatio = (float) width / (float) height;
+        if (bitmapRatio > 1) {
+            width = maxSize;
+            height = (int) (width / bitmapRatio);
+        } else {
+            height = maxSize;
+            width = (int) (height * bitmapRatio);
+        }
+        return Bitmap.createScaledBitmap(image, width, height, true);
     }
 
 }
