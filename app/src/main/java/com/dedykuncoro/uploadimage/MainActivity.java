@@ -3,6 +3,7 @@ package com.dedykuncoro.uploadimage;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
@@ -26,6 +27,7 @@ import com.dedykuncoro.uploadimage.app.AppController;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
@@ -38,10 +40,10 @@ public class MainActivity extends AppCompatActivity {
     Toolbar toolbar;
     ImageView imageView;
     EditText txt_name;
-    Bitmap bitmap;
+    Bitmap bitmap, decoded;
     int success;
     int PICK_IMAGE_REQUEST = 1;
-    int bitmapSize = 100; // range 1 - 100
+    int bitmap_size = 60; // range 1 - 100
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -88,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
 
     public String getStringImage(Bitmap bmp) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.JPEG, bitmapSize, baos);
+        bmp.compress(Bitmap.CompressFormat.JPEG, bitmap_size, baos);
         byte[] imageBytes = baos.toByteArray();
         String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
         return encodedImage;
@@ -142,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
                 Map<String, String> params = new HashMap<String, String>();
 
                 //menambah parameter yang di kirim ke web servis
-                params.put(KEY_IMAGE, getStringImage(bitmap));
+                params.put(KEY_IMAGE, getStringImage(decoded));
                 params.put(KEY_NAME, txt_name.getText().toString().trim());
 
                 //kembali ke parameters
@@ -170,8 +172,8 @@ public class MainActivity extends AppCompatActivity {
             try {
                 //mengambil fambar dari Gallery
                 bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
-                //menampilkan gambar yang dipilih dari gallery ke ImageView
-                imageView.setImageBitmap(getResizedBitmap(bitmap, 512)); // 512 adalah resolusi tertinggi setelah image di resize, bisa di ganti.
+                // 512 adalah resolusi tertinggi setelah image di resize, bisa di ganti.
+                setToImageView(getResizedBitmap(bitmap, 512));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -181,6 +183,16 @@ public class MainActivity extends AppCompatActivity {
     private void kosong() {
         imageView.setImageResource(0);
         txt_name.setText(null);
+    }
+
+    private void setToImageView(Bitmap bmp) {
+        //compress image
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.JPEG, bitmap_size, bytes);
+        decoded = BitmapFactory.decodeStream(new ByteArrayInputStream(bytes.toByteArray()));
+
+        //menampilkan gambar yang dipilih dari camera/gallery ke ImageView
+        imageView.setImageBitmap(decoded);
     }
 
     // fungsi resize image
